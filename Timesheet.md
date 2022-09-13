@@ -15,4 +15,4 @@ Part 1 completed in 5 hours and 18 minutes.
 Estimated time: 
 
     Sep 13 '22
-    09:05 - : Working on sign up and log in
+    09:05 - 12:00: Working on sign up and log in
