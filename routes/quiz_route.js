@@ -57,4 +57,20 @@ router.post("/edit/:id", async (req, res) => {
     }
 });
 
+router.delete("/delete/:id", async (req, res) => {
+    const { id } = req.params;
+    const userId = req.userInfo.id;
+    const findQuiz = await QuizModel.findById(id);
+    if (userId !== findQuiz.creator) {
+        return res.status(400).send({ message: "Unathorized operation." });
+    }
+
+    try {
+        await QuizModel.findByIdAndDelete(id);
+        return res.status(200).send({ message: "Quiz successfully deleted." });
+    } catch (error) {
+        return res.status(500).send(error);
+    }
+});
+
 module.exports = router;

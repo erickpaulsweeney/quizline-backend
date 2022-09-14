@@ -18,9 +18,9 @@ const httpServer = app.listen(process.env.PORT || 8000, () => {
     console.log("Server connected");
 });
 
-const peerServer = ExpressPeerServer(httpServer, {
-    debug: true,
-});
+// const peerServer = ExpressPeerServer(httpServer, {
+//     debug: true,
+// });
 
 // Database connection
 const DB_URI =
@@ -42,20 +42,20 @@ app.use(express.urlencoded({ extended: false }));
 app.use(morgan("dev"));
 
 // Routes
-app.use("/peerjs", peerServer);
+// app.use("/peerjs", peerServer);
 app.use("/auth", authRoute);
 app.use(authenticateRequest);
 app.use("/question", questionRoute);
 app.use("/quiz", quizRoute);
 
 
-peerServer.on("connection", (peer) => {
-    console.log("Peer connected " + peer.id);
-});
+// peerServer.on("connection", (peer) => {
+//     console.log("Peer connected " + peer.id);
+// });
 
-peerServer.on("disconnect", (peer) => {
-    console.log("Peer disconnected " + peer.id);
-});
+// peerServer.on("disconnect", (peer) => {
+//     console.log("Peer disconnected " + peer.id);
+// });
 
 const io = require("socket.io")(httpServer, {
     cors: {
@@ -66,6 +66,10 @@ const io = require("socket.io")(httpServer, {
 
 io.on("connection", (socket) => {
     console.log("Client connected " + socket.id);
+    socket.on("join-room", (roomId) => {
+        socket.join(roomId);
+        io.to()
+    })
 })
 
 function authenticateRequest(req, res, next) {
