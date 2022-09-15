@@ -9,6 +9,10 @@ const questionSchema = mongoose.Schema(
         image: {
             type: String,
         },
+        type: {
+            type: String,
+            require: true,
+        },
         choices: [
             mongoose.Schema({
                 text: {

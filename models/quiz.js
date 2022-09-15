@@ -15,10 +15,6 @@ const quizSchema = mongoose.Schema(
             type: String,
             require: true,
         },
-        type: {
-            type: String,
-            require: true,
-        },
         questions: [
             {
                 type: String,

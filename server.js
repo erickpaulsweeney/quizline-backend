@@ -4,7 +4,6 @@ const morgan = require("morgan");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
-const { ExpressPeerServer } = require("peer");
 require("dotenv").config();
 
 const authRoute = require("./routes/auth_route");
@@ -17,10 +16,6 @@ const app = express();
 const httpServer = app.listen(process.env.PORT || 8000, () => {
     console.log("Server connected");
 });
-
-// const peerServer = ExpressPeerServer(httpServer, {
-//     debug: true,
-// });
 
 // Database connection
 const DB_URI =
@@ -42,35 +37,62 @@ app.use(express.urlencoded({ extended: false }));
 app.use(morgan("dev"));
 
 // Routes
-// app.use("/peerjs", peerServer);
 app.use("/auth", authRoute);
 app.use(authenticateRequest);
 app.use("/question", questionRoute);
 app.use("/quiz", quizRoute);
 
-
-// peerServer.on("connection", (peer) => {
-//     console.log("Peer connected " + peer.id);
-// });
-
-// peerServer.on("disconnect", (peer) => {
-//     console.log("Peer disconnected " + peer.id);
-// });
-
 const io = require("socket.io")(httpServer, {
     cors: {
         origin: "*",
         methods: ["GET", "POST", "DELETE"],
-    }
+    },
 });
 
+let rooms = {};
+
 io.on("connection", (socket) => {
-    console.log("Client connected " + socket.id);
-    socket.on("join-room", (roomId) => {
-        socket.join(roomId);
-        io.to()
-    })
-})
+    socket.on("create-room", ({ roomLink, pin }) => {
+        rooms[roomLink] = { pin: pin };
+        rooms[roomLink].creator = socket.id;
+        socket.join(roomLink);
+    });
+
+    socket.on("enter-pin", ({ roomLink, input }) => {
+        if (rooms[roomLink].pin === input) {
+            io.to(socket.id).emit("ask-name");
+        } else {
+            io.to(socket.id).emit("wrong-pin");
+        }
+    });
+
+    socket.on("send-name", ({ roomLink, name }) => {
+        console.log(name);
+        const userObj = {
+            id: socket.id,
+            name: name,
+            answers: [],
+        };
+        if (!rooms[roomLink].hasOwnProperty("users")) {
+            rooms[roomLink].users = [userObj];
+            io.to(rooms[roomLink].creator).emit(
+                "new-user",
+                rooms[roomLink].users
+            );
+        } else {
+            rooms[roomLink].users = rooms[roomLink].users.concat(userObj);
+            io.to(rooms[roomLink].creator).emit(
+                "new-user",
+                rooms[roomLink].users
+            );
+        }
+        io.to(socket.id).emit("entered");
+    });
+
+    socket.on("start-signal", ({ roomLink }) => {
+        socket.to(roomLink).emit("start-game");
+    });
+});
 
 function authenticateRequest(req, res, next) {
     const authHeaderInfo = req.headers["authorization"];

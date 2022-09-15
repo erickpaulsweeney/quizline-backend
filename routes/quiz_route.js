@@ -4,9 +4,9 @@ const QuizModel = require("../models/quiz");
 const router = express.Router();
 
 router.post("/new", async (req, res) => {
-    const { title, subject, type, questions } = req.body;
+    const { title, subject, questions } = req.body;
     const creator = req.userInfo.id;
-    if (!title || !subject || !type) {
+    if (!title || !subject) {
         return res.status(400).send({ message: "Title, subject, and quiz type are required." });
     }
     if (questions.length === 0) {
@@ -17,7 +17,6 @@ router.post("/new", async (req, res) => {
         title, 
         creator,
         subject,
-        type,
         questions, 
     });
 
