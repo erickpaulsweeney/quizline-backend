@@ -24,7 +24,7 @@ router.post("/new", upload.single("image"), async (req, res) => {
     const image =
         req.file?.filename ?
         "http://localhost:8000/" + req.file.filename :
-        "http://localhost:8000/1663053537604-default-image";
+        "http://localhost:8000/1663053537604-default-image.png";
     const userId = req.userInfo.id;
     if (!question) {
         return res.status(400).send({ message: "Question required." });

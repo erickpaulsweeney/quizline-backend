@@ -19,6 +19,8 @@ Part 1 completed in 5 hours and 18 minutes.
     Sep 14 '22
     11:30 - 12:00: Working on starting quiz game
     03:10 - 03:48: Working on starting quiz game
+    Sep 16 '22
+    03:04 - 12:14: Working on quiz game proper
 
 # Frontend
 
@@ -37,6 +39,8 @@ Part 1 completed in 5 hours and 18 minutes.
     Sep 15 '22
     03:10 - 03:48: Working on starting quiz game
     09:40 - 12:00: Working on starting quiz game
+    Sep 16 '22
+    03:04 - 12:14: Working on quiz game proper
 
 #### Misc
     Sep 15 '22

@@ -42,58 +42,6 @@ app.use(authenticateRequest);
 app.use("/question", questionRoute);
 app.use("/quiz", quizRoute);
 
-const io = require("socket.io")(httpServer, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST", "DELETE"],
-    },
-});
-
-let rooms = {};
-
-io.on("connection", (socket) => {
-    socket.on("create-room", ({ roomLink, pin }) => {
-        rooms[roomLink] = { pin: pin };
-        rooms[roomLink].creator = socket.id;
-        socket.join(roomLink);
-    });
-
-    socket.on("enter-pin", ({ roomLink, input }) => {
-        if (rooms[roomLink].pin === input) {
-            io.to(socket.id).emit("ask-name");
-        } else {
-            io.to(socket.id).emit("wrong-pin");
-        }
-    });
-
-    socket.on("send-name", ({ roomLink, name }) => {
-        console.log(name);
-        const userObj = {
-            id: socket.id,
-            name: name,
-            answers: [],
-        };
-        if (!rooms[roomLink].hasOwnProperty("users")) {
-            rooms[roomLink].users = [userObj];
-            io.to(rooms[roomLink].creator).emit(
-                "new-user",
-                rooms[roomLink].users
-            );
-        } else {
-            rooms[roomLink].users = rooms[roomLink].users.concat(userObj);
-            io.to(rooms[roomLink].creator).emit(
-                "new-user",
-                rooms[roomLink].users
-            );
-        }
-        io.to(socket.id).emit("entered");
-    });
-
-    socket.on("start-signal", ({ roomLink }) => {
-        socket.to(roomLink).emit("start-game");
-    });
-});
-
 function authenticateRequest(req, res, next) {
     const authHeaderInfo = req.headers["authorization"];
     if (!authHeaderInfo) {
@@ -113,3 +61,101 @@ function authenticateRequest(req, res, next) {
         return res.status(403).send(error);
     }
 }
+
+const io = require("socket.io")(httpServer, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST", "DELETE"],
+    },
+});
+
+let rooms = {};
+
+io.on("connection", (socket) => {
+    socket.on("create-room", (pin) => {
+        rooms[pin] = {
+            creator: socket.id,
+            started: false,
+            users: [],
+        };
+        socket.join(pin);
+    });
+
+    socket.on("enter-pin", (input) => {
+        if (Object.keys(rooms).includes(input)) {
+            if (rooms[input].started) {
+                io.to(socket.id).emit("already-started");
+            } else {
+                io.to(socket.id).emit("ask-name", input);
+            }
+        } else {
+            io.to(socket.id).emit("wrong-pin");
+        }
+    });
+
+    socket.on("send-name", ({ roomPin, name }) => {
+        if (rooms[roomPin].users.map(user => user.name).includes(name)) {
+            io.to(socket.id).emit("name-taken");
+            return;
+        }
+        const pin = roomPin;
+        const userObj = {
+            id: socket.id,
+            name: name,
+            answers: [],
+            score: 0,
+            status: true,
+        };
+        socket.join(pin);
+        rooms[pin].users = rooms[pin].users.concat(userObj);
+        io.to(rooms[pin].creator).emit("new-user", rooms[pin].users);
+        io.to(socket.id).emit("entered");
+    });
+
+    socket.on("start-signal", (pin) => {
+        rooms[pin].started = true;
+        socket.to(pin).emit("start-game");
+    });
+
+    socket.on("share-details", ({ quiz, pin }) => {
+        socket.to(pin).emit("give-data", quiz);
+    });
+
+    socket.on("get-data", (pin) => {
+        io.to(socket.id).emit("update-data", rooms[pin]);
+    });
+
+    socket.on("answer", ({ roomPin, input }) => {
+        rooms[roomPin].users.forEach(user => {
+            if (user.id === socket.id) {
+                user.answers = user.answers.concat(input);
+            }
+        });
+        io.to(rooms[roomPin].creator).emit("update-data", rooms[roomPin]);
+    });
+
+    socket.on("time-end", (pin) => {
+        io.to(pin).emit("time-end");
+    });
+
+    socket.on("next-question", ({ pin, curr }) => {
+        console.log(curr)
+        io.to(pin).emit("next-question", curr);
+    });
+
+    socket.on("game-done", (pin) => {
+        console.log("test")
+        io.to(pin).emit("game-done");
+    });
+
+    socket.on("disconnect", () => {
+        let currRoom;
+        Object.keys(rooms).forEach((room) => {
+            if (room?.users?.includes(socket.id)) {
+                room.users[socket.id].status = false;
+                currRoom = room;
+            }
+        });
+        if (currRoom) io.to(rooms[currRoom].creator).emit("user-disconnected");
+    });
+});
