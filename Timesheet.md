@@ -25,7 +25,7 @@ Part 1 completed in 5 hours and 18 minutes.
 ### Part 3 (Estimated time: 10 hours)
     Sep 19 '22
     03:04 - 04:32: Working on quiz results
-    06:04 - : Working on quiz results
+    06:04 - 11:28: Working on quiz results
 
 # Frontend
 
@@ -55,4 +55,4 @@ Part 1 completed in 5 hours and 18 minutes.
 ### Part 3 (Estimated time: 10 hours)
     Sep 19 '22
     03:04 - 04:32: Working on quiz results
-    06:04 - : Working on quiz results
+    06:04 - 11:28: Working on quiz results
