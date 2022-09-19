@@ -36,7 +36,7 @@ router.get("/", async (req, res) => {
     console.log(userId);
     try {
         const list = await ResultModel.find({ creator: userId })
-            .populate("quiz", "title subject")
+            .populate("quiz", "title subject questions")
             .populate("results", "name score");
         return res.status(200).json(list);
     } catch (error) {
