@@ -9,6 +9,7 @@ require("dotenv").config();
 const authRoute = require("./routes/auth_route");
 const questionRoute = require("./routes/question_route");
 const quizRoute = require("./routes/quiz_route");
+const resultRoute = require("./routes/result_route");
 
 // Server setup
 const app = express();
@@ -41,6 +42,7 @@ app.use("/auth", authRoute);
 app.use(authenticateRequest);
 app.use("/question", questionRoute);
 app.use("/quiz", quizRoute);
+app.use("/result", resultRoute);
 
 function authenticateRequest(req, res, next) {
     const authHeaderInfo = req.headers["authorization"];
@@ -104,12 +106,11 @@ io.on("connection", (socket) => {
             name: name,
             answers: [],
             score: 0,
-            status: true,
         };
         socket.join(pin);
         rooms[pin].users = rooms[pin].users.concat(userObj);
         io.to(rooms[pin].creator).emit("new-user", rooms[pin].users);
-        io.to(socket.id).emit("entered");
+        io.to(socket.id).emit("entered", socket.id);
     });
 
     socket.on("start-signal", (pin) => {
@@ -125,10 +126,13 @@ io.on("connection", (socket) => {
         io.to(socket.id).emit("update-data", rooms[pin]);
     });
 
-    socket.on("answer", ({ roomPin, input }) => {
+    socket.on("answer", ({ roomPin, input, check }) => {
         rooms[roomPin].users.forEach(user => {
             if (user.id === socket.id) {
                 user.answers = user.answers.concat(input);
+                if (check) {
+                    user.score += 1;
+                }
             }
         });
         io.to(rooms[roomPin].creator).emit("update-data", rooms[roomPin]);
@@ -139,23 +143,15 @@ io.on("connection", (socket) => {
     });
 
     socket.on("next-question", ({ pin, curr }) => {
-        console.log(curr)
         io.to(pin).emit("next-question", curr);
     });
 
     socket.on("game-done", (pin) => {
-        console.log("test")
-        io.to(pin).emit("game-done");
+        io.to(pin).emit("game-done", rooms[pin]);
     });
 
-    socket.on("disconnect", () => {
-        let currRoom;
-        Object.keys(rooms).forEach((room) => {
-            if (room?.users?.includes(socket.id)) {
-                room.users[socket.id].status = false;
-                currRoom = room;
-            }
-        });
-        if (currRoom) io.to(rooms[currRoom].creator).emit("user-disconnected");
+    socket.on("results", ({ pin, chartData }) => {
+        rooms[pin].chartData = chartData;
+        io.to(pin).emit("top-three", chartData);
     });
 });

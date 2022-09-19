@@ -22,6 +22,11 @@ Part 1 completed in 5 hours and 18 minutes.
     Sep 16 '22
     03:04 - 12:14: Working on quiz game proper
 
+### Part 3 (Estimated time: 10 hours)
+    Sep 19 '22
+    03:04 - 04:32: Working on quiz results
+    06:04 - : Working on quiz results
+
 # Frontend
 
 
@@ -46,3 +51,8 @@ Part 1 completed in 5 hours and 18 minutes.
     Sep 15 '22
     03:48 - 04:36: Reworking on UI as per the feedback
     06:27 - 09:40: Reworking on UI as per the feedback
+
+### Part 3 (Estimated time: 10 hours)
+    Sep 19 '22
+    03:04 - 04:32: Working on quiz results
+    06:04 - : Working on quiz results
